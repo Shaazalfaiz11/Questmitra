@@ -2,6 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ══════════════════════════════════════════════════════════
+   QUEST MITRA — Design System Tokens
+   ══════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Brand Colors ── */
+  --qm-primary: 220 65% 16%;       /* Deep Navy */
+  --qm-primary-light: 220 55% 24%;
+  --qm-accent: 245 58% 51%;        /* Indigo */
+  --qm-accent-light: 245 70% 62%;
+  --qm-accent-subtle: 245 80% 96%;
+  --qm-violet: 270 60% 55%;        /* Violet */
+  --qm-blue: 215 85% 55%;          /* Soft Blue */
+  --qm-blue-light: 215 90% 95%;
+
+  /* ── Semantic Colors ── */
+  --qm-success: 152 60% 42%;
+  --qm-success-light: 152 60% 94%;
+  --qm-warning: 38 92% 50%;
+  --qm-warning-light: 38 92% 94%;
+  --qm-error: 0 72% 51%;
+  --qm-error-light: 0 72% 95%;
+  --qm-info: 215 85% 55%;
+  --qm-info-light: 215 85% 94%;
+
+  /* ── Surfaces (Light Mode) ── */
+  --qm-bg: 0 0% 98%;
+  --qm-bg-subtle: 220 20% 96%;
+  --qm-surface: 0 0% 100%;
+  --qm-surface-hover: 220 20% 97%;
+  --qm-surface-raised: 0 0% 100%;
+  --qm-sidebar-bg: 220 65% 12%;
+  --qm-sidebar-text: 0 0% 100%;
+
+  /* ── Borders ── */
+  --qm-border: 220 13% 91%;
+  --qm-border-hover: 220 13% 82%;
+  --qm-border-focus: 245 58% 51%;
+
+  /* ── Text ── */
+  --qm-text: 220 30% 12%;
+  --qm-text-secondary: 220 10% 44%;
+  --qm-text-muted: 220 10% 62%;
+  --qm-text-placeholder: 220 10% 72%;
+  --qm-text-inverse: 0 0% 100%;
+
+  /* ── Shadows ── */
+  --qm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --qm-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --qm-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --qm-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.1);
+  --qm-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12);
+
+  /* ── Radius ── */
+  --qm-radius-sm: 8px;
+  --qm-radius: 12px;
+  --qm-radius-md: 16px;
+  --qm-radius-lg: 20px;
+  --qm-radius-xl: 24px;
+  --qm-radius-full: 9999px;
+
+  /* ── Transition ── */
+  --qm-transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --qm-transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Dark Mode ── */
+[data-theme="dark"] {
+  --qm-bg: 222 30% 8%;
+  --qm-bg-subtle: 222 25% 11%;
+  --qm-surface: 222 25% 13%;
+  --qm-surface-hover: 222 25% 16%;
+  --qm-surface-raised: 222 25% 15%;
+  --qm-sidebar-bg: 222 30% 6%;
+
+  --qm-border: 222 20% 20%;
+  --qm-border-hover: 222 20% 28%;
+
+  --qm-text: 220 20% 92%;
+  --qm-text-secondary: 220 15% 68%;
+  --qm-text-muted: 220 12% 52%;
+  --qm-text-placeholder: 220 12% 42%;
+
+  --qm-accent-subtle: 245 40% 18%;
+  --qm-blue-light: 215 40% 16%;
+  --qm-success-light: 152 30% 16%;
+  --qm-warning-light: 38 40% 16%;
+  --qm-error-light: 0 35% 16%;
+  --qm-info-light: 215 40% 16%;
+
+  --qm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --qm-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --qm-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --qm-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --qm-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+
+/* ══════════════════════════════════════════════════════════
+   BASE STYLES
+   ══════════════════════════════════════════════════════════ */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -9,14 +110,273 @@
 }
 
 body {
-  font-family: var(--font-jakarta), sans-serif;
+  font-family: var(--font-inter), var(--font-jakarta), 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: hsl(var(--qm-bg));
+  color: hsl(var(--qm-text));
+  transition: background-color var(--qm-transition), color var(--qm-transition);
 }
 
+/* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--qm-border));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--qm-border-hover));
+}
+
+/* ── Focus Ring ── */
+*:focus-visible {
+  outline: 2px solid hsl(var(--qm-accent));
+  outline-offset: 2px;
+  border-radius: var(--qm-radius-sm);
+}
+
+/* ── Selection ── */
+::selection {
+  background: hsl(var(--qm-accent) / 0.15);
+  color: hsl(var(--qm-text));
+}
+
+/* ══════════════════════════════════════════════════════════
+   ANIMATIONS
+   ══════════════════════════════════════════════════════════ */
+
+@keyframes qm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes qm-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes qm-slide-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes qm-slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes qm-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes qm-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes qm-pulse-ring {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes qm-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes qm-progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* ── Animation Utilities ── */
+.qm-fade-in { animation: qm-fade-in 0.3s ease-out; }
+.qm-slide-up { animation: qm-slide-up 0.35s ease-out; }
+.qm-slide-down { animation: qm-slide-down 0.35s ease-out; }
+.qm-slide-in-left { animation: qm-slide-in-left 0.3s ease-out; }
+.qm-scale-in { animation: qm-scale-in 0.25s ease-out; }
+
+.qm-skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--qm-bg-subtle)) 25%,
+    hsl(var(--qm-border)) 50%,
+    hsl(var(--qm-bg-subtle)) 75%
+  );
+  background-size: 200% 100%;
+  animation: qm-shimmer 1.5s infinite ease-in-out;
+  border-radius: var(--qm-radius-sm);
+}
+
+/* ══════════════════════════════════════════════════════════
+   COMPONENT UTILITIES
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Cards ── */
+.qm-card {
+  background: hsl(var(--qm-surface));
+  border: 1px solid hsl(var(--qm-border));
+  border-radius: var(--qm-radius-lg);
+  box-shadow: var(--qm-shadow-sm);
+  transition: box-shadow var(--qm-transition), border-color var(--qm-transition), transform var(--qm-transition);
+}
+.qm-card:hover {
+  box-shadow: var(--qm-shadow-md);
+  border-color: hsl(var(--qm-border-hover));
+}
+.qm-card-interactive:hover {
+  transform: translateY(-2px);
+}
+
+/* ── Buttons ── */
+.qm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: var(--qm-radius-full);
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  transition: all var(--qm-transition);
+  white-space: nowrap;
+}
+.qm-btn:active { transform: scale(0.97); }
+.qm-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.qm-btn-primary {
+  background: hsl(var(--qm-accent));
+  color: white;
+  box-shadow: 0 2px 8px hsl(var(--qm-accent) / 0.25);
+}
+.qm-btn-primary:hover:not(:disabled) {
+  background: hsl(var(--qm-accent-light));
+  box-shadow: 0 4px 16px hsl(var(--qm-accent) / 0.3);
+}
+
+.qm-btn-secondary {
+  background: hsl(var(--qm-surface));
+  color: hsl(var(--qm-text));
+  border: 1px solid hsl(var(--qm-border));
+}
+.qm-btn-secondary:hover:not(:disabled) {
+  background: hsl(var(--qm-surface-hover));
+  border-color: hsl(var(--qm-border-hover));
+}
+
+.qm-btn-dark {
+  background: hsl(var(--qm-primary));
+  color: white;
+  box-shadow: 0 2px 8px hsl(var(--qm-primary) / 0.3);
+}
+.qm-btn-dark:hover:not(:disabled) {
+  background: hsl(var(--qm-primary-light));
+}
+
+.qm-btn-ghost {
+  background: transparent;
+  color: hsl(var(--qm-text-secondary));
+}
+.qm-btn-ghost:hover:not(:disabled) {
+  background: hsl(var(--qm-bg-subtle));
+  color: hsl(var(--qm-text));
+}
+
+/* ── Inputs ── */
+.qm-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--qm-text));
+  background: hsl(var(--qm-surface));
+  border: 1px solid hsl(var(--qm-border));
+  border-radius: var(--qm-radius-md);
+  outline: none;
+  transition: border-color var(--qm-transition), box-shadow var(--qm-transition);
+}
+.qm-input::placeholder { color: hsl(var(--qm-text-placeholder)); }
+.qm-input:hover { border-color: hsl(var(--qm-border-hover)); }
+.qm-input:focus {
+  border-color: hsl(var(--qm-accent));
+  box-shadow: 0 0 0 3px hsl(var(--qm-accent) / 0.1);
+}
+.qm-input-error {
+  border-color: hsl(var(--qm-error)) !important;
+  background: hsl(var(--qm-error-light));
+}
+
+/* ── Badges ── */
+.qm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--qm-radius-full);
+  letter-spacing: 0.02em;
+}
+.qm-badge-accent {
+  background: hsl(var(--qm-accent-subtle));
+  color: hsl(var(--qm-accent));
+}
+.qm-badge-success {
+  background: hsl(var(--qm-success-light));
+  color: hsl(var(--qm-success));
+}
+.qm-badge-warning {
+  background: hsl(var(--qm-warning-light));
+  color: hsl(var(--qm-warning));
+}
+.qm-badge-error {
+  background: hsl(var(--qm-error-light));
+  color: hsl(var(--qm-error));
+}
+
+/* ── Toast ── */
+.qm-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: var(--qm-radius-full);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: var(--qm-shadow-lg);
+  animation: qm-slide-down 0.3s ease-out;
+}
+.qm-toast-error {
+  background: hsl(var(--qm-error));
+  color: white;
+}
+.qm-toast-success {
+  background: hsl(var(--qm-success));
+  color: white;
+}
+
+/* ── Modal Backdrop ── */
+.qm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  z-index: 50;
+  animation: qm-fade-in 0.2s ease-out;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PRINT STYLES
+   ══════════════════════════════════════════════════════════ */
 
 .avoid-break { break-inside: avoid; page-break-inside: avoid; }
 

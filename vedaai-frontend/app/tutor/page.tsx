@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, Sparkles, Send } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, ArrowLeft, Send } from "lucide-react";
 import Link from "next/link";
 import { API_URL } from "../lib/api";
 
@@ -27,16 +27,15 @@ export default function TutorPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, currentTranscript, isThinking]);
 
-  // Speak text using Edge Neural TTS backend — natural human female voice
+  // Speak text using Edge Neural TTS backend
   const speak = useCallback(async (text: string) => {
     if (!voiceEnabled) return;
-    
-    // Stop any currently playing audio
+
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
-    
+
     try {
       setIsSpeaking(true);
       const response = await fetch(`${API_URL}/api/tutor/speak`, {
@@ -44,21 +43,21 @@ export default function TutorPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
-      
+
       if (!response.ok) throw new Error("TTS failed");
-      
+
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       audio.playbackRate = 1.3;
       audioRef.current = audio;
-      
+
       audio.onended = () => {
         setIsSpeaking(false);
         URL.revokeObjectURL(audioUrl);
       };
       audio.onerror = () => setIsSpeaking(false);
-      
+
       await audio.play();
     } catch (error) {
       console.error("TTS error:", error);
@@ -67,10 +66,9 @@ export default function TutorPage() {
   }, [voiceEnabled]);
 
   // Send message to tutor API with SSE streaming
-  // Optimized: starts speaking the first sentence while rest streams in
   const sendToTutor = useCallback(async (userMessage: string) => {
     if (!userMessage.trim()) return;
-    
+
     const newUserMsg: Message = { role: "user", content: userMessage.trim() };
     setMessages(prev => [...prev, newUserMsg]);
     setIsThinking(true);
@@ -95,10 +93,10 @@ export default function TutorPage() {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          
+
           const chunk = decoder.decode(value);
           const lines = chunk.split("\n").filter(l => l.startsWith("data: "));
-          
+
           for (const line of lines) {
             try {
               const data = JSON.parse(line.replace("data: ", ""));
@@ -112,7 +110,6 @@ export default function TutorPage() {
                   return [...prev, { role: "assistant", content: fullText }];
                 });
 
-                // Speak the first sentence as soon as it's ready
                 if (!firstSentenceSpoken && /[.!?]\s/.test(fullText)) {
                   firstSentenceSpoken = true;
                   setIsThinking(false);
@@ -120,7 +117,6 @@ export default function TutorPage() {
               }
               if (data.done) {
                 setIsThinking(false);
-                // Always speak the FULL response when done
                 speak(data.fullResponse || fullText);
               }
               if (data.error) {
@@ -137,24 +133,23 @@ export default function TutorPage() {
     }
   }, [messages, speak]);
 
-  // Start speech recognition
+  // Speech recognition
   const startListening = useCallback(() => {
     if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
       alert("Your browser doesn't support speech recognition. Please use Chrome.");
       return;
     }
 
-    // Cancel any ongoing audio
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     setIsSpeaking(false);
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    
+
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = "en-US";
-    
+
     recognition.onresult = (event: any) => {
       let interim = "";
       let final = "";
@@ -207,37 +202,62 @@ export default function TutorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: "hsl(var(--qm-bg))" }}>
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-lg border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <Link href="/assignments" className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+      <div className="backdrop-blur-lg px-6 py-4 flex items-center justify-between sticky top-0 z-50"
+        style={{
+          background: "hsl(var(--qm-surface) / 0.9)",
+          borderBottom: "1px solid hsl(var(--qm-border))",
+        }}
+      >
+        <Link href="/assignments" className="flex items-center gap-2 transition-colors"
+          style={{ color: "hsl(var(--qm-text-muted))" }}
+        >
           <ArrowLeft size={20} />
-          <span className="font-medium hidden sm:inline">Back</span>
+          <span className="font-medium hidden sm:inline text-[14px]">Back</span>
         </Link>
         <div className="flex items-center gap-2">
-          <Sparkles className="text-indigo-500" size={20} />
-          <h1 className="text-lg font-bold text-gray-900">English Tutor</h1>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20.02L12 17L7.09 20.02L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
+              fill="hsl(var(--qm-accent))" fillOpacity="0.8" />
+          </svg>
+          <h1 className="text-[16px] font-bold" style={{ color: "hsl(var(--qm-text))" }}>AI Tutor</h1>
         </div>
         <button
           onClick={() => {
             setVoiceEnabled(!voiceEnabled);
             if (voiceEnabled && audioRef.current) { audioRef.current.pause(); audioRef.current = null; setIsSpeaking(false); }
           }}
-          className={`p-2 rounded-full transition-colors ${voiceEnabled ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400"}`}
+          className="p-2 rounded-full transition-colors"
+          style={{
+            background: voiceEnabled ? "hsl(var(--qm-accent-subtle))" : "hsl(var(--qm-bg-subtle))",
+            color: voiceEnabled ? "hsl(var(--qm-accent))" : "hsl(var(--qm-text-muted))",
+          }}
+          aria-label={voiceEnabled ? "Disable voice" : "Enable voice"}
         >
           {voiceEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
         </button>
       </div>
 
-      {/* Messages Area */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 max-w-2xl mx-auto w-full">
         {messages.length === 0 && !isListening && (
-          <div className="text-center mt-16">
-            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-indigo-500 to-violet-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-indigo-200">
-              <Sparkles size={32} className="text-white" />
+          <div className="text-center mt-16 qm-slide-up">
+            <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center mb-6"
+              style={{
+                background: "linear-gradient(135deg, hsl(245 58% 51%), hsl(270 60% 55%))",
+                boxShadow: "0 8px 24px hsla(245, 58%, 51%, 0.25)",
+              }}
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20.02L12 17L7.09 20.02L8.45 13.97L4 9.27L9.91 8.26L12 2Z"
+                  fill="white" fillOpacity="0.9" />
+              </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Hi! I&apos;m your English Tutor 👋</h2>
-            <p className="text-gray-500 max-w-sm mx-auto mb-8">
+            <h2 className="text-[22px] font-bold mb-2" style={{ color: "hsl(var(--qm-text))" }}>
+              Hi! I&apos;m your AI Tutor 👋
+            </h2>
+            <p className="max-w-sm mx-auto mb-8 text-[14px]" style={{ color: "hsl(var(--qm-text-muted))" }}>
               Click the microphone and start speaking in English. I&apos;ll help you practice and improve!
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
@@ -245,7 +265,7 @@ export default function TutorPage() {
                 <button
                   key={s}
                   onClick={() => sendToTutor(s)}
-                  className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 transition-all"
+                  className="qm-btn qm-btn-secondary text-[12px] px-4 py-2"
                 >
                   {s}
                 </button>
@@ -257,11 +277,21 @@ export default function TutorPage() {
         {messages.map((msg, i) => (
           <div key={i} className={`flex mb-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+              className={`max-w-[80%] px-4 py-3 text-[14px] leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-indigo-600 text-white rounded-br-md"
-                  : "bg-white text-gray-800 border border-gray-100 shadow-sm rounded-bl-md"
+                  ? "rounded-2xl rounded-br-md text-white"
+                  : "rounded-2xl rounded-bl-md"
               }`}
+              style={
+                msg.role === "user"
+                  ? { background: "hsl(var(--qm-accent))" }
+                  : {
+                      background: "hsl(var(--qm-surface))",
+                      color: "hsl(var(--qm-text))",
+                      border: "1px solid hsl(var(--qm-border))",
+                      boxShadow: "var(--qm-shadow-sm)",
+                    }
+              }
             >
               {msg.content}
             </div>
@@ -270,11 +300,17 @@ export default function TutorPage() {
 
         {isThinking && messages[messages.length - 1]?.role !== "assistant" && (
           <div className="flex justify-start mb-4">
-            <div className="bg-white border border-gray-100 shadow-sm px-4 py-3 rounded-2xl rounded-bl-md">
+            <div className="px-4 py-3 rounded-2xl rounded-bl-md"
+              style={{
+                background: "hsl(var(--qm-surface))",
+                border: "1px solid hsl(var(--qm-border))",
+                boxShadow: "var(--qm-shadow-sm)",
+              }}
+            >
               <div className="flex gap-1.5">
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--qm-accent))", animationDelay: "0ms" }} />
+                <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--qm-accent))", animationDelay: "150ms" }} />
+                <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--qm-accent))", animationDelay: "300ms" }} />
               </div>
             </div>
           </div>
@@ -282,7 +318,13 @@ export default function TutorPage() {
 
         {currentTranscript && (
           <div className="flex justify-end mb-4">
-            <div className="max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md bg-indigo-400/20 text-indigo-800 text-sm italic border border-indigo-200">
+            <div className="max-w-[80%] px-4 py-3 rounded-2xl rounded-br-md text-[14px] italic"
+              style={{
+                background: "hsl(var(--qm-accent-subtle))",
+                color: "hsl(var(--qm-accent))",
+                border: "1px solid hsl(var(--qm-accent) / 0.2)",
+              }}
+            >
               {currentTranscript}...
             </div>
           </div>
@@ -292,21 +334,26 @@ export default function TutorPage() {
       </div>
 
       {/* Bottom Controls */}
-      <div className="sticky bottom-0 bg-white/90 backdrop-blur-lg border-t border-gray-200 px-4 py-4">
+      <div className="sticky bottom-0 backdrop-blur-lg px-4 py-4"
+        style={{
+          background: "hsl(var(--qm-surface) / 0.9)",
+          borderTop: "1px solid hsl(var(--qm-border))",
+        }}
+      >
         <div className="max-w-2xl mx-auto flex items-center gap-3">
-          {/* Text Input */}
           <form onSubmit={handleTextSubmit} className="flex-1 flex items-center gap-2">
             <input
               type="text"
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              className="qm-input rounded-xl py-3 text-[13px]"
             />
             <button
               type="submit"
               disabled={!textInput.trim()}
-              className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="qm-btn p-3 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: "hsl(var(--qm-accent))", borderRadius: "var(--qm-radius)" }}
             >
               <Send size={18} />
             </button>
@@ -316,28 +363,35 @@ export default function TutorPage() {
           <button
             onClick={isListening ? stopListening : startListening}
             disabled={isThinking}
-            className={`relative p-4 rounded-full transition-all shadow-lg ${
-              isListening
-                ? "bg-red-500 text-white shadow-red-200 scale-110"
-                : "bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-indigo-200 hover:scale-105"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`relative p-4 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+              isListening ? "scale-110" : "hover:scale-105"
+            }`}
+            style={{
+              background: isListening
+                ? "hsl(var(--qm-error))"
+                : "linear-gradient(135deg, hsl(245 58% 51%), hsl(270 60% 55%))",
+              color: "white",
+              boxShadow: isListening
+                ? "0 4px 16px hsla(0, 72%, 51%, 0.3)"
+                : "0 4px 16px hsla(245, 58%, 51%, 0.3)",
+            }}
+            aria-label={isListening ? "Stop listening" : "Start listening"}
           >
             {isListening ? <MicOff size={22} /> : <Mic size={22} />}
             {isListening && (
               <>
-                <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-30" />
-                <span className="absolute -inset-1 rounded-full border-2 border-red-300 animate-pulse" />
+                <span className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: "hsl(var(--qm-error))" }} />
+                <span className="absolute -inset-1 rounded-full border-2 animate-pulse" style={{ borderColor: "hsl(var(--qm-error) / 0.4)" }} />
               </>
             )}
             {isSpeaking && (
-              <span className="absolute -inset-1 rounded-full border-2 border-indigo-300 animate-pulse" />
+              <span className="absolute -inset-1 rounded-full border-2 animate-pulse" style={{ borderColor: "hsl(var(--qm-accent) / 0.4)" }} />
             )}
           </button>
         </div>
 
-        {/* Status Indicator */}
         <div className="text-center mt-2">
-          <p className="text-xs text-gray-400 font-medium">
+          <p className="text-[11px] font-medium" style={{ color: "hsl(var(--qm-text-muted))" }}>
             {isListening ? "🎙️ Listening... Speak now!" : isSpeaking ? "🔊 Tutor is speaking..." : isThinking ? "💭 Thinking..." : "Tap the mic or type to start"}
           </p>
         </div>

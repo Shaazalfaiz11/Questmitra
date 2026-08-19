@@ -1,6 +1,6 @@
 import { Request, Response } from "express"
 import { Assignment }        from "../models/assignment.model"
-import { generationQueue }   from "../queues/generation.queue"
+import { getGenerationQueue } from "../queues/generation.queue"
 
 const VALID_TYPES = ["mcq", "short", "long"]
 
@@ -22,8 +22,10 @@ export const createAssignment = async (req: Request, res: Response) => {
   const err = validateBody(req.body)
   if (err) return res.status(400).json({ message: err })
 
+  let assignment: InstanceType<typeof Assignment> | null = null
+
   try {
-    const assignment = await Assignment.create({
+    assignment = await Assignment.create({
       subject:       req.body.subject.trim(),
       topic:         req.body.topic.trim(),
       totalMarks:    Number(req.body.totalMarks),
@@ -33,7 +35,7 @@ export const createAssignment = async (req: Request, res: Response) => {
       status:        "generating",
     })
 
-    const job = await generationQueue.add(
+    const job = await getGenerationQueue().add(
       "generate-paper",
       { assignmentId: assignment._id }
     )
@@ -45,6 +47,16 @@ export const createAssignment = async (req: Request, res: Response) => {
     })
   } catch (error) {
     console.error("createAssignment error:", error)
+
+    // The record is created before the job is queued, so a failed enqueue would
+    // otherwise leave it stuck on "generating" forever.
+    if (assignment) {
+      await Assignment.findByIdAndUpdate(assignment._id, {
+        status: "failed",
+        error: error instanceof Error ? error.message : "Could not queue generation",
+      }).catch(() => {})
+    }
+
     res.status(500).json({ message: "Internal server error" })
   }
 }

@@ -2,7 +2,15 @@ let _cached: any = null
 
 export const getRedisConnection = () => {
   if (!_cached) {
-    const redisUrl = new URL(process.env.REDIS_URL as string)
+    const raw = process.env.REDIS_URL
+    if (!raw) {
+      throw new Error(
+        "REDIS_URL is not set. Background jobs (assignment generation, PDF processing) " +
+          "need Redis. Add REDIS_URL to vedaai-backend/.env and restart."
+      )
+    }
+
+    const redisUrl = new URL(raw)
     _cached = {
       host: redisUrl.hostname,
       port: Number(redisUrl.port) || 6379,

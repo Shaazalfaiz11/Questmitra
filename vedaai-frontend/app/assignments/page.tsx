@@ -37,175 +37,132 @@ export default function AssignmentsPage() {
   const fmtDate = (d?: string) =>
     d
       ? new Date(d)
-          .toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" })
-          .replace(/\//g, "-")
+          .toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
       : "—"
 
   return (
-    <div
-      className="bg-[#CECECE] md:bg-transparent min-h-screen"
-      style={{ fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', sans-serif" }}
-    >
+    <div className="min-h-screen" style={{ background: "hsl(var(--qm-bg))" }}>
 
-      {/* ── Mobile sub-header (back + title) ── */}
-      <div className="md:hidden flex items-center px-5 py-4 bg-[#CECECE]">
+      {/* ── Mobile sub-header ── */}
+      <div className="md:hidden flex items-center px-5 py-4" style={{ background: "hsl(var(--qm-bg))" }}>
         <button
           onClick={() => router.back()}
-          className="w-10 h-10 rounded-full bg-[#E3E3E3] flex items-center justify-center flex-shrink-0"
+          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{ background: "hsl(var(--qm-bg-subtle))", border: "1px solid hsl(var(--qm-border))" }}
+          aria-label="Go back"
         >
-          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#1C1C1E" strokeWidth="2.5">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="hsl(var(--qm-text))" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4M4 12L10 6M4 12L10 18"/>
           </svg>
         </button>
-        <h1 className="flex-1 text-center text-[17px] font-[800] text-[#1C1C1E] mr-10 tracking-tight"
-          style={{ fontFamily: "var(--font-jakarta), Plus Jakarta Sans, sans-serif" }}>
-          Assignments
+        <h1 className="flex-1 text-center text-[17px] font-bold mr-9 tracking-tight"
+          style={{ color: "hsl(var(--qm-text))" }}>
+          Quests
         </h1>
       </div>
 
-      {/* ── Desktop breadcrumb: ← 🏠 Assignment ── */}
-      <div className="hidden md:flex items-center justify-between px-8 pt-6 pb-1 max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="w-8 h-8 rounded-full bg-transparent flex items-center justify-center hover:bg-white/40 transition-colors">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#6B7280" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </button>
-          {/* Grid/Home icon */}
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#6B7280" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round"
-              d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
-          </svg>
-          <span className="text-[14px] font-medium text-[#6B7280]">Assignment</span>
+      {/* ── Desktop header ── */}
+      <div className="hidden md:block px-8 pt-8 pb-2 max-w-6xl mx-auto">
+        <div className="flex items-center gap-2.5 mb-1">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--qm-success))" }} />
+          <h1 className="text-[26px] font-extrabold tracking-tight" style={{ color: "hsl(var(--qm-text))" }}>
+            Quests
+          </h1>
         </div>
-
-        {/* Bell + John Doe — Figma top right */}
-        <div className="flex items-center gap-4">
-          <button className="relative p-2 rounded-full hover:bg-white/50 transition-colors">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#374151" strokeWidth="1.8">
-              <path strokeLinecap="round" strokeLinejoin="round"
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-            </svg>
-            <span className="absolute top-2 right-2.5 w-2 h-2 bg-[#EF4444] rounded-full border-2 border-white"/>
-          </button>
-          <div className="flex items-center gap-2.5 bg-white pl-1.5 pr-4 py-1.5 rounded-full shadow-sm border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors">
-            <div className="w-8 h-8 rounded-full bg-[#FFE5D9] flex items-center justify-center overflow-hidden">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ashish&backgroundColor=FFE5D9" alt="Avatar" className="w-full h-full object-cover"/>
-            </div>
-            <span className="text-[14px] font-bold text-[#1C1C1E]">Ashish Soni</span>
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#9CA3AF" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Desktop header with green dot + title + subtitle ── */}
-      <div className="hidden md:block px-8 pt-4 pb-2 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#22C55E]" />
-          <h1 className="text-[28px] font-extrabold text-[#1C1C1E] tracking-tight">Assignments</h1>
-        </div>
-        <p className="text-[14px] text-[#9CA3AF] font-medium ml-[18px]">
-          Manage and create assignments for your classes.
+        <p className="text-[14px] font-medium ml-[18px]" style={{ color: "hsl(var(--qm-text-muted))" }}>
+          Manage and create AI-powered assessments for your classes.
         </p>
       </div>
 
-      <div className="px-4 md:px-8 max-w-7xl mx-auto pb-36">
+      <div className="px-4 md:px-8 max-w-6xl mx-auto pb-36">
 
         {/* ── Filter + Search row ── */}
         {assignments.length > 0 && (
-          <div className="flex items-center bg-white rounded-2xl p-2 mb-6 mt-3 shadow-sm">
-            {/* Filter pill — natural look from screenshot */}
+          <div className="flex items-center gap-2 mb-6 mt-4">
+            {/* Filter */}
             <div className="relative">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                aria-label="Filter by status"
               >
                 <option value="All">All statuses</option>
                 <option value="Completed">Completed</option>
                 <option value="Generating">Generating</option>
                 <option value="Failed">Failed</option>
               </select>
-              <button className="flex items-center gap-2 px-5 py-2.5 bg-transparent
-                text-[15px] font-medium text-[#9CA3AF] flex-shrink-0 transition-colors hover:text-gray-600">
-                {/* Funnel icon exact from screenshot (hollow outline) */}
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <div className="qm-btn qm-btn-secondary text-[13px] px-4 py-2.5 pointer-events-none">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round"
                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                 </svg>
                 {statusFilter === "All" ? "Filter" : statusFilter}
-              </button>
+              </div>
             </div>
 
-            {/* Search bar — wrapped in pill border */}
-            <div className="flex-1 relative ml-2">
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#9CA3AF" strokeWidth="2">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="hsl(var(--qm-text-muted))" strokeWidth="2"
+              >
                 <circle cx="11" cy="11" r="8" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.3-4.3" />
               </svg>
               <input
-                className="w-full pl-[42px] pr-5 py-2.5 bg-white rounded-full
-                  text-[15px] font-medium text-gray-700 outline-none border border-gray-200
-                  focus:border-gray-300 focus:ring-1 focus:ring-gray-200 placeholder-[#9CA3AF] transition-all"
-                placeholder="Search Name"
+                className="qm-input pl-10 py-2.5 rounded-full text-[13px]"
+                placeholder="Search quests..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                aria-label="Search quests"
               />
             </div>
           </div>
         )}
 
         {/* ── Content ── */}
-        {assignments.length === 0 && !loadingList ? (
+        {loadingList ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="qm-card p-6">
+                <div className="space-y-3">
+                  <div className="h-5 w-3/4 qm-skeleton" />
+                  <div className="h-4 w-1/2 qm-skeleton" />
+                  <div className="flex justify-between mt-4">
+                    <div className="h-3 w-24 qm-skeleton" />
+                    <div className="h-3 w-20 qm-skeleton" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : assignments.length === 0 ? (
           /* Empty state */
-          <div className="flex flex-col items-center justify-center min-h-[55vh]">
-            <svg width="300" height="285" viewBox="0 0 220 210" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Background circle */}
-              <circle cx="105" cy="110" r="85" fill="#EFEFEF"/>
-              {/* Document */}
-              <rect x="68" y="42" width="74" height="96" rx="8" fill="white" filter="url(#shadow)"/>
-              <defs>
-                <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.08"/>
-                </filter>
-              </defs>
-              {/* Document lines */}
-              <rect x="80" y="60" width="50" height="7" rx="3.5" fill="#1C1C2E"/>
-              <rect x="80" y="78" width="50" height="5" rx="2.5" fill="#D1D5DB"/>
-              <rect x="80" y="90" width="50" height="5" rx="2.5" fill="#D1D5DB"/>
-              <rect x="80" y="102" width="50" height="5" rx="2.5" fill="#D1D5DB"/>
-              <rect x="80" y="114" width="36" height="5" rx="2.5" fill="#D1D5DB"/>
-              {/* Magnifying glass circle */}
-              <circle cx="122" cy="133" r="30" fill="#E8E8F0" stroke="#C9C9DC" strokeWidth="2"/>
-              <circle cx="122" cy="133" r="26" fill="#F4F4FB"/>
-              {/* Red X inside magnifier */}
-              <path d="M111 122L133 144" stroke="#EF4444" strokeWidth="7" strokeLinecap="round"/>
-              <path d="M133 122L111 144" stroke="#EF4444" strokeWidth="7" strokeLinecap="round"/>
-              {/* Magnifier handle */}
-              <path d="M144 155L158 169" stroke="#9CA3AF" strokeWidth="8" strokeLinecap="round"/>
-              {/* Decorative: curved line left */}
-              <path d="M30 75 Q20 95 35 115" stroke="#1C2B4B" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-              {/* Decorative: sparkle bottom-left */}
-              <path d="M42 162 L44 155 L46 162 L53 164 L46 166 L44 173 L42 166 L35 164 Z" fill="#1C6B8A"/>
-              {/* Decorative: pill tags top-right */}
-              <rect x="162" y="48" width="8" height="8" rx="4" fill="#9CA3AF"/>
-              <rect x="174" y="48" width="28" height="8" rx="4" fill="#D1D5DB"/>
-              {/* Decorative: blue dot right */}
-              <circle cx="192" cy="130" r="6" fill="#1C6B8A"/>
-            </svg>
-            <h2 className="text-[18px] font-extrabold text-gray-900 mt-2 mb-2">No assignments yet</h2>
-            <p className="text-[13px] text-gray-400 text-center max-w-xs leading-relaxed mb-8">
-              Create your first assignment to start collecting and grading student submissions.
+          <div className="flex flex-col items-center justify-center min-h-[55vh] qm-slide-up">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
+              style={{ background: "hsl(var(--qm-accent-subtle))" }}
+            >
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--qm-accent))" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h2 className="text-[18px] font-bold mb-2" style={{ color: "hsl(var(--qm-text))" }}>
+              No quests yet
+            </h2>
+            <p className="text-[13px] text-center max-w-xs leading-relaxed mb-6"
+              style={{ color: "hsl(var(--qm-text-muted))" }}
+            >
+              Create your first quest to start generating AI-powered assessments.
             </p>
+            <Link href="/assignments/create" className="qm-btn qm-btn-primary">
+              Start a Quest
+            </Link>
           </div>
         ) : (
-          /* ── Assignment cards — 2-col grid on desktop ── */
+          /* ── Quest cards ── */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4" ref={menuRef}>
             {filtered.map((a) => (
-              <AssignmentCard
+              <QuestCard
                 key={a._id}
                 assignment={a}
                 isOpen={openMenu === a._id}
@@ -219,53 +176,44 @@ export default function AssignmentsPage() {
         )}
       </div>
 
-      {/* ── Mobile bottom blur fade overlay ── */}
-      <div
-        className="md:hidden fixed bottom-[68px] left-0 right-0 h-24 z-20 pointer-events-none"
-        style={{
-          background: "linear-gradient(to top, rgba(206,206,206,0.95) 0%, rgba(206,206,206,0) 100%)",
-        }}
-      />
-
-      {/* ── Mobile FAB: white circle with orange + ── */}
+      {/* ── Mobile FAB ── */}
       <Link
         href="/assignments/create"
-        className="md:hidden fixed z-[60] w-12 h-12 rounded-full bg-white
-          flex items-center justify-center active:scale-95 transition-all"
-        style={{ bottom: "105px", right: "16px", boxShadow: "0 2px 10px rgba(0,0,0,0.10)" }}
+        className="md:hidden fixed z-[60] w-12 h-12 rounded-full flex items-center justify-center active:scale-95 transition-all"
+        style={{
+          bottom: "105px",
+          right: "16px",
+          background: "linear-gradient(135deg, hsl(245 58% 51%), hsl(270 60% 55%))",
+          boxShadow: "0 4px 14px hsla(245, 58%, 51%, 0.35)",
+        }}
+        aria-label="Create new quest"
       >
         <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-          <path d="M12 4v16M4 12h16" stroke="#E4703D" strokeWidth="2.5" strokeLinecap="round"/>
+          <path d="M12 4v16M4 12h16" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
         </svg>
       </Link>
 
-      {/* ── Desktop bottom blur fade overlay ── */}
-      <div
-        className="hidden md:block fixed bottom-0 left-[350px] right-0 h-32 z-20 pointer-events-none"
-        style={{
-          background: "linear-gradient(to top, rgba(240,240,240,1) 0%, rgba(240,240,240,0) 100%)",
-        }}
-      />
-
-      {/* ── Desktop FAB: "Create Assignment" dark pill — centered in content area ── */}
-      <div className="hidden md:flex fixed bottom-10 left-[350px] right-0 z-30 justify-center pointer-events-none">
+      {/* ── Desktop FAB ── */}
+      <div className="hidden md:flex fixed bottom-10 left-[280px] right-0 z-30 justify-center pointer-events-none">
         <Link
           href="/assignments/create"
-          className="pointer-events-auto flex items-center gap-2.5 px-6 py-3 bg-[#1A1A1A] text-white rounded-full
-            text-[14px] font-semibold shadow-[0_4px_14px_rgba(0,0,0,0.15)]
-            hover:bg-[#000000] active:scale-95 transition-all"
+          className="pointer-events-auto qm-btn text-[13px] px-6 py-3 text-white transition-all hover:-translate-y-0.5"
+          style={{
+            background: "linear-gradient(135deg, hsl(245 58% 51%), hsl(270 60% 55%))",
+            boxShadow: "0 4px 20px hsla(245, 58%, 51%, 0.35)",
+          }}
         >
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2.5">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16M4 12h16"/>
           </svg>
-          Create Assignment
+          Create Quest
         </Link>
       </div>
     </div>
   )
 }
 
-function AssignmentCard({
+function QuestCard({
   assignment: a, isOpen, onToggleMenu, onView, onDelete, fmtDate,
 }: {
   assignment: Assignment
@@ -275,44 +223,57 @@ function AssignmentCard({
   onDelete: () => void
   fmtDate: (d?: string) => string
 }) {
+  const statusStyles = {
+    completed: { bg: "hsl(var(--qm-success-light))", color: "hsl(var(--qm-success))", label: "Completed" },
+    generating: { bg: "hsl(var(--qm-warning-light))", color: "hsl(var(--qm-warning))", label: "Generating..." },
+    failed: { bg: "hsl(var(--qm-error-light))", color: "hsl(var(--qm-error))", label: "Failed" },
+  }
+  const st = statusStyles[(a.status as keyof typeof statusStyles) || "completed"] || statusStyles.completed
+
   return (
-    <div 
+    <div
       onClick={onView}
-      className="bg-white rounded-[24px] px-6 py-5 relative shadow-[0_2px_8px_rgba(0,0,0,0.04)]
-        cursor-pointer hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-shadow group"
+      className="qm-card qm-card-interactive px-6 py-5 relative cursor-pointer group"
     >
-      {/* Top row: title + 3-dot */}
-      <div className="flex items-start justify-between mb-6">
-        <h3
-          className="text-[18px] font-[800] text-[#1C1C1E] tracking-tight pr-6 group-hover:text-[#E4703D] transition-colors"
-          style={{ fontFamily: "var(--font-jakarta), Plus Jakarta Sans, sans-serif" }}
+      {/* Top row */}
+      <div className="flex items-start justify-between mb-4">
+        <h3 className="text-[16px] font-bold tracking-tight pr-6 transition-colors group-hover:text-qm-accent"
+          style={{ color: "hsl(var(--qm-text))" }}
         >
-          {a.subject ? `${a.subject} on ${a.topic}` : a.topic || "Quiz on Electricity"}
+          {a.subject ? `${a.subject} — ${a.topic}` : a.topic || "Untitled Quest"}
         </h3>
         <div className="relative flex-shrink-0">
           <button
-            onClick={(e) => { e.stopPropagation(); onToggleMenu(); }}
-            className="p-1 -mr-2 rounded-full hover:bg-gray-100 transition-colors"
+            onClick={(e) => { e.stopPropagation(); onToggleMenu() }}
+            className="p-1 -mr-2 rounded-full transition-colors"
+            style={{ color: "hsl(var(--qm-text-muted))" }}
+            aria-label="Quest options"
           >
-            {/* Vertical 3-dot */}
-            <svg width="24" height="24" fill="#1C1C1E" viewBox="0 0 24 24">
-              <circle cx="12" cy="5"  r="1.8"/>
-              <circle cx="12" cy="12" r="1.8"/>
-              <circle cx="12" cy="19" r="1.8"/>
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="5" r="1.5"/>
+              <circle cx="12" cy="12" r="1.5"/>
+              <circle cx="12" cy="19" r="1.5"/>
             </svg>
           </button>
           {isOpen && (
-            <div 
-              className="absolute right-0 top-10 bg-white border border-gray-100
-                rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] z-50 py-1.5 min-w-[160px]"
+            <div className="absolute right-0 top-8 z-50 py-1.5 min-w-[150px] qm-card qm-scale-in"
+              style={{ boxShadow: "var(--qm-shadow-lg)" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <button onClick={(e) => { e.stopPropagation(); onView(); }}
-                className="w-full text-left px-4 py-2 text-[14px] font-semibold text-gray-700 hover:bg-gray-50">
-                View Assignment
+              <button onClick={(e) => { e.stopPropagation(); onView() }}
+                className="w-full text-left px-4 py-2 text-[13px] font-medium transition-colors"
+                style={{ color: "hsl(var(--qm-text))" }}
+                onMouseEnter={e => e.currentTarget.style.background = "hsl(var(--qm-bg-subtle))"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                View Quest
               </button>
-              <button onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                className="w-full text-left px-4 py-2 text-[14px] font-semibold text-[#EF4444] hover:bg-red-50">
+              <button onClick={(e) => { e.stopPropagation(); onDelete() }}
+                className="w-full text-left px-4 py-2 text-[13px] font-medium transition-colors"
+                style={{ color: "hsl(var(--qm-error))" }}
+                onMouseEnter={e => e.currentTarget.style.background = "hsl(var(--qm-error-light))"}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
                 Delete
               </button>
             </div>
@@ -320,23 +281,26 @@ function AssignmentCard({
         </div>
       </div>
 
-      {/* Status badge if pending */}
+      {/* Status badge */}
       {a.status && a.status !== "completed" && (
-        <span className={`inline-block text-[11px] font-bold px-3 py-1 rounded-full mb-3
-          ${a.status === "failed" ? "bg-red-100 text-red-600" : "bg-orange-100 text-orange-600"}`}>
-          {a.status === "failed" ? "Failed" : "Generating..."}
+        <span className="inline-block text-[11px] font-bold px-3 py-1 rounded-full mb-3"
+          style={{ background: st.bg, color: st.color }}
+        >
+          {st.label}
         </span>
       )}
 
-      {/* Bottom: Assigned on + Due — Figma exact spacing */}
-      <div className="flex items-center justify-between text-[13px] text-[#9CA3AF] font-medium">
+      {/* Bottom: dates */}
+      <div className="flex items-center justify-between text-[12px]"
+        style={{ color: "hsl(var(--qm-text-muted))" }}
+      >
         <span>
-          <span className="font-bold text-[#1C1C1E]">Assigned on</span>
+          <span className="font-semibold" style={{ color: "hsl(var(--qm-text-secondary))" }}>Created</span>
           <span> : {fmtDate(a.createdAt)}</span>
         </span>
         {a.dueDate && (
           <span>
-            <span className="font-bold text-[#1C1C1E]">Due</span>
+            <span className="font-semibold" style={{ color: "hsl(var(--qm-text-secondary))" }}>Due</span>
             <span> : {fmtDate(a.dueDate)}</span>
           </span>
         )}

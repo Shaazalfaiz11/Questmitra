@@ -54,8 +54,10 @@ function PdfFlipReader({ bookId, totalPages, title, author }: ReaderProps) {
   // Cover
   pages.push(
     <FlipPage key="cover">
-      <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#16213e] flex flex-col items-center justify-center p-8 text-center">
-        <BookOpen size={48} className="text-white/50 mb-4" />
+      <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center"
+        style={{ background: "linear-gradient(135deg, hsl(220 65% 12%), hsl(245 58% 30%))" }}
+      >
+        <BookOpen size={48} className="text-white/40 mb-4" />
         <h2 className="text-lg font-bold text-white max-w-[280px] line-clamp-3">{title}</h2>
         <p className="text-white/60 text-sm mt-2">{author || "Unknown Author"}</p>
         <p className="text-white/30 text-xs mt-4">{totalPages} pages</p>
@@ -85,7 +87,9 @@ function PdfFlipReader({ bookId, totalPages, title, author }: ReaderProps) {
   // Back cover
   pages.push(
     <FlipPage key="back">
-      <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#16213e] flex flex-col items-center justify-center text-center gap-3">
+      <div className="w-full h-full flex flex-col items-center justify-center text-center gap-3"
+        style={{ background: "linear-gradient(135deg, hsl(220 65% 12%), hsl(245 58% 30%))" }}
+      >
         <BookOpen size={48} className="text-white/40" />
         <p className="text-white/50 text-sm font-medium">End of Book</p>
       </div>
@@ -93,9 +97,15 @@ function PdfFlipReader({ bookId, totalPages, title, author }: ReaderProps) {
   );
 
   return (
-    <div className={`${isFullScreen ? "fixed inset-0 z-50" : "min-h-screen"} bg-gradient-to-b from-[#2d2d3f] to-[#1a1a2e] flex flex-col items-center`}>
-      <div className="w-full bg-black/30 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
-        <button onClick={() => isFullScreen ? setIsFullScreen(false) : router.push("/library")} className="flex items-center gap-2 text-white/70 hover:text-white transition-colors">
+    <div className={`${isFullScreen ? "fixed inset-0 z-50" : "min-h-screen"} flex flex-col items-center`}
+      style={{ background: "linear-gradient(180deg, hsl(220 50% 15%), hsl(220 65% 10%))" }}
+    >
+      <div className="w-full backdrop-blur-md px-4 py-3 flex items-center justify-between sticky top-0 z-50"
+        style={{ background: "rgba(0,0,0,0.3)", borderBottom: "1px solid rgba(255,255,255,0.1)" }}
+      >
+        <button onClick={() => isFullScreen ? setIsFullScreen(false) : router.push("/library")}
+          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+        >
           <ArrowLeft size={20} />
           <span className="font-medium text-sm hidden sm:inline">{isFullScreen ? "Exit" : "Library"}</span>
         </button>
@@ -127,7 +137,9 @@ function PdfFlipReader({ bookId, totalPages, title, author }: ReaderProps) {
         </button>
       </div>
 
-      <div className="fixed bottom-4 bg-black/60 backdrop-blur-md text-white px-5 py-2 rounded-full text-xs font-medium shadow-xl">
+      <div className="fixed bottom-4 backdrop-blur-md text-white px-5 py-2 rounded-full text-xs font-medium"
+        style={{ background: "rgba(0,0,0,0.6)", boxShadow: "var(--qm-shadow-lg)" }}
+      >
         Page {currentPage + 1} of {pages.length}
       </div>
     </div>
@@ -148,9 +160,12 @@ function GoogleBooksReader({ bookId, title, author }: ReaderProps) {
   }, []);
 
   return (
-    <div className={`${isFullScreen ? "fixed inset-0 z-50" : "min-h-screen"} bg-[#1a1a2e] flex flex-col`}>
-      {/* App-like dark header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-black/50 backdrop-blur-md border-b border-white/10 z-10">
+    <div className={`${isFullScreen ? "fixed inset-0 z-50" : "min-h-screen"} flex flex-col`}
+      style={{ background: "hsl(220 65% 10%)" }}
+    >
+      <div className="flex items-center justify-between px-4 py-3 backdrop-blur-md z-10"
+        style={{ background: "rgba(0,0,0,0.5)", borderBottom: "1px solid rgba(255,255,255,0.1)" }}
+      >
         <button onClick={() => router.push("/library")} className="flex items-center gap-2 text-white/70 hover:text-white transition-colors">
           <ArrowLeft size={20} />
           <span className="text-sm font-medium hidden sm:inline">Library</span>
@@ -164,7 +179,6 @@ function GoogleBooksReader({ bookId, title, author }: ReaderProps) {
         </button>
       </div>
 
-      {/* Full-page Google Books embedded reader — shows all available pages for free */}
       <div className="flex-1 w-full relative bg-[#525659]">
         <iframe
           src={`https://books.google.com/books?id=${bookId}&lpg=PP1&pg=PP1&output=embed`}

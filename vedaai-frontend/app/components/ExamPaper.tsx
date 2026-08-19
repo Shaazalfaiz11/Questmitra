@@ -40,25 +40,42 @@ export default function ExamPaper({ assignment }: Props) {
     return d.charAt(0).toUpperCase() + d.slice(1);
   };
 
+  const getDifficultyColor = (diff?: string) => {
+    const d = (diff || "medium").toLowerCase();
+    if (d === "easy") return { bg: "hsl(var(--qm-success-light))", color: "hsl(var(--qm-success))" }
+    if (d === "hard") return { bg: "hsl(var(--qm-error-light))", color: "hsl(var(--qm-error))" }
+    return { bg: "hsl(var(--qm-warning-light))", color: "hsl(var(--qm-warning))" }
+  }
+
   return (
     <div className="p-4 sm:p-6 min-h-[calc(100vh-64px)]">
-      <div className="bg-[#444444] rounded-[24px] p-6 sm:p-8 w-full max-w-[1100px] mx-auto shadow-sm">
+      <div className="rounded-3xl p-6 sm:p-8 w-full max-w-[1100px] mx-auto"
+        style={{ background: "hsl(var(--qm-primary))" }}
+      >
         {/* Header Text */}
-        <p className="text-white text-[15px] sm:text-[16px] font-bold mb-6 font-['Plus_Jakarta_Sans'] leading-relaxed">
-          Certainly, Lakshya! Here are customized Question Paper for your {assignment.subject} classes on the {assignment.topic} chapters:
+        <p className="text-white text-[14px] sm:text-[15px] font-semibold mb-6 leading-relaxed opacity-90">
+          Here is your customized Question Paper for{" "}
+          <span className="font-bold">{assignment.subject}</span> on the{" "}
+          <span className="font-bold">{assignment.topic}</span> chapters:
         </p>
 
         {/* Action Button */}
         <button
           onClick={handlePDF}
           disabled={printing}
-          className="flex items-center gap-2 mb-8 bg-white text-[#111] px-5 py-2.5 rounded-full text-[13px] font-bold hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-70"
+          className="qm-btn text-[13px] mb-8 disabled:opacity-70"
+          style={{
+            background: "hsl(var(--qm-surface))",
+            color: "hsl(var(--qm-text))",
+          }}
         >
           {printing ? (
-            <span className="w-4 h-4 border-2 border-[#111]/30 border-t-[#111] rounded-full animate-spin" />
+            <span className="w-4 h-4 border-2 rounded-full animate-spin"
+              style={{ borderColor: "hsl(var(--qm-border))", borderTopColor: "hsl(var(--qm-text))" }}
+            />
           ) : (
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" 
+              <path strokeLinecap="round" strokeLinejoin="round"
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
           )}
@@ -66,20 +83,21 @@ export default function ExamPaper({ assignment }: Props) {
         </button>
 
         {/* Paper Container */}
-        <div 
+        <div
           ref={paperRef}
-          className="bg-white rounded-[32px] p-8 sm:p-14 text-black shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
+          className="bg-white rounded-3xl p-8 sm:p-14 text-black"
+          style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
         >
           {/* Paper Header */}
           <div className="text-center mb-10">
             <h1 className="text-[22px] sm:text-[26px] font-extrabold text-gray-900 tracking-tight mb-1">
-              Delhi Public School, Sector-4, Bokaro
+              Assessment Paper
             </h1>
             <h2 className="text-[16px] sm:text-[18px] font-bold text-gray-800">
               Subject: {assignment.subject}
             </h2>
             <h3 className="text-[16px] sm:text-[18px] font-bold text-gray-800 mt-0.5">
-              Class: 5th
+              Topic: {assignment.topic}
             </h3>
           </div>
 
@@ -105,7 +123,7 @@ export default function ExamPaper({ assignment }: Props) {
               <span className="flex-1 border-b border-gray-400"></span>
             </div>
             <div className="flex gap-4">
-              <span className="min-w-[120px]">Class: 5th Section: </span>
+              <span className="min-w-[80px]">Class / Section: </span>
               <span className="flex-1 border-b border-gray-400"></span>
             </div>
           </div>
@@ -130,25 +148,34 @@ export default function ExamPaper({ assignment }: Props) {
                     </div>
 
                     <div className="space-y-4">
-                      {sec.questions.map((q, qi) => (
-                        <div key={qi} className="text-[13px] text-gray-800 flex items-start gap-2 avoid-break leading-relaxed">
-                          <span className="min-w-[16px]">{qi + 1}.</span>
-                          <div>
-                            <p>
-                              [{getDifficultyString(q.difficulty)}] {q.text || "Question text missing"} [{q.marks || 1} Marks]
-                            </p>
-                            {q.type === "mcq" && q.options && q.options.length > 0 && (
-                              <div className="pl-4 mt-2 space-y-1">
-                                {q.options.map((opt, oi) => (
-                                  <div key={oi}>
-                                    {String.fromCharCode(65 + oi)}. {opt}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                      {sec.questions.map((q, qi) => {
+                        const dc = getDifficultyColor(q.difficulty)
+                        return (
+                          <div key={qi} className="text-[13px] text-gray-800 flex items-start gap-2 avoid-break leading-relaxed">
+                            <span className="min-w-[16px]">{qi + 1}.</span>
+                            <div>
+                              <p>
+                                <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mr-1.5"
+                                  style={{ background: dc.bg, color: dc.color }}
+                                >
+                                  {getDifficultyString(q.difficulty)}
+                                </span>
+                                {q.text || "Question text missing"}{" "}
+                                <span className="text-gray-500">[{q.marks || 1} Marks]</span>
+                              </p>
+                              {q.type === "mcq" && q.options && q.options.length > 0 && (
+                                <div className="pl-4 mt-2 space-y-1">
+                                  {q.options.map((opt, oi) => (
+                                    <div key={oi}>
+                                      {String.fromCharCode(65 + oi)}. {opt}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 );

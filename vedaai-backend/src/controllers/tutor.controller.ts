@@ -6,7 +6,7 @@ const client = new OpenAI({
   apiKey: process.env.GROQ_API_KEY!,
 });
 
-const TUTOR_SYSTEM_PROMPT = `You are an enthusiastic, patient, and encouraging English language tutor named "Veda Tutor". 
+const TUTOR_SYSTEM_PROMPT = `You are an enthusiastic, patient, and encouraging English language tutor named "Quest Mitra Tutor". 
 
 Your role:
 - Help students improve their English speaking, grammar, vocabulary, and pronunciation
@@ -48,7 +48,7 @@ export const chatWithTutor = async (req: Request, res: Response) => {
     ];
 
     const stream = await client.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: process.env.GROQ_TUTOR_MODEL ?? "openai/gpt-oss-20b",
       max_tokens: 200,
       temperature: 0.8,
       messages,

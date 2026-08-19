@@ -290,6 +290,6 @@ export const useAssignmentStore = create<AssignmentState>()(
           error: null,
         }),
     }),
-    { name: "veda-assignment" }
+    { name: "quest-mitra" }
   )
 )

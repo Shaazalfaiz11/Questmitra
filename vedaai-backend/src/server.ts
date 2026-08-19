@@ -20,7 +20,7 @@ app.use("/api/assignments", assignmentRoutes)
 app.use("/api/books", bookRoutes)
 app.use("/api/tutor", tutorRoutes)
 
-app.get("/", (_req, res) => res.send("VedaAI Backend Running 🚀"))
+app.get("/", (_req, res) => res.send("Quest Mitra Backend Running 🚀"))
 
 connectDb()
 
