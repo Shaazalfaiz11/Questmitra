@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { devtools } from "zustand/middleware"
+import { v4 as uuidv4 } from "uuid"
 
 import { API_URL } from "@/lib/api"
 
@@ -32,6 +33,8 @@ export interface AssignmentForm {
 }
 
 export interface Question {
+  /** Present on persisted questions; needed to target one for regeneration. */
+  _id?: string
   text: string
   difficulty: Difficulty
   marks: number
@@ -55,6 +58,7 @@ export interface Assignment {
   status: GenerationStatus
   result: Section[] | null
   error: string | null
+  retryCount?: number
   createdAt: string
   dueDate?: string
 }
@@ -76,6 +80,9 @@ interface AssignmentState {
   status: GenerationStatus
   progress: number
   error: string | null
+  retryCount: number
+  retryMessage: string | null
+  regeneratingQuestionId: string | null
   wsConnected: boolean
 
   setFormField: <K extends keyof AssignmentForm>(k: K, v: AssignmentForm[K]) => void
@@ -92,6 +99,9 @@ interface AssignmentState {
   setStatus: (s: GenerationStatus) => void
   setProgress: (p: number) => void
   setError: (e: string | null) => void
+  setRetryMessage: (m: string | null) => void
+  setRegeneratingQuestionId: (id: string | null) => void
+  updateQuestion: (sectionIndex: number, questionIndex: number, newQuestion: Question) => void
   setWsConnected: (c: boolean) => void
   setCurrentId: (id: string) => void
   reset: () => void
@@ -128,6 +138,9 @@ export const useAssignmentStore = create<AssignmentState>()(
       status: "idle",
       progress: 0,
       error: null,
+      retryCount: 0,
+      retryMessage: null,
+      regeneratingQuestionId: null,
       wsConnected: false,
 
       setFormField: (k, v) =>
@@ -204,14 +217,18 @@ export const useAssignmentStore = create<AssignmentState>()(
           .join(", ")
         const instructions = `${form.additionalInfo || "Attempt all questions"}. Question breakdown: ${typeBreakdown}`
 
-        set({ status: "generating", progress: 0, error: null })
+        set({ status: "generating", progress: 0, error: null, retryMessage: null, retryCount: 0 })
 
         try {
+          const idempotencyKey = uuidv4()
           const res = await fetch(
             `${API_URL}/api/assignments`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { 
+                "Content-Type": "application/json",
+                "X-Idempotency-Key": idempotencyKey
+              },
               body: JSON.stringify({
                 subject: form.subject.trim(),
                 topic: form.topic.trim(),
@@ -226,6 +243,13 @@ export const useAssignmentStore = create<AssignmentState>()(
           if (!res.ok) throw new Error(`HTTP ${res.status}`)
           const data = await res.json()
           const id: string = data.data._id
+          
+          if (res.status === 200 && data.message === "Idempotent request detected") {
+            if (data.data.status === "completed") {
+              set({ status: "completed" })
+            }
+          }
+          
           set({ currentId: id })
           return id
         } catch (err: any) {
@@ -279,6 +303,19 @@ export const useAssignmentStore = create<AssignmentState>()(
       setStatus: (status) => set({ status }),
       setProgress: (progress) => set({ progress }),
       setError: (error) => set({ error }),
+      setRetryMessage: (retryMessage) => set({ retryMessage }),
+      setRegeneratingQuestionId: (id) => set({ regeneratingQuestionId: id }),
+      updateQuestion: (sectionIndex, questionIndex, newQuestion) => set((state) => {
+        if (!state.currentAssignment || !state.currentAssignment.result) return state;
+        const newResult = [...state.currentAssignment.result];
+        newResult[sectionIndex].questions[questionIndex] = newQuestion;
+        return {
+          currentAssignment: {
+            ...state.currentAssignment,
+            result: newResult
+          }
+        };
+      }),
       setWsConnected: (wsConnected) => set({ wsConnected }),
       setCurrentId: (id) => set({ currentId: id }),
       reset: () =>
@@ -288,6 +325,9 @@ export const useAssignmentStore = create<AssignmentState>()(
           status: "idle",
           progress: 0,
           error: null,
+          retryCount: 0,
+          retryMessage: null,
+          regeneratingQuestionId: null,
         }),
     }),
     { name: "quest-mitra" }

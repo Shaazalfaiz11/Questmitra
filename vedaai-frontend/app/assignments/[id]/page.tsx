@@ -14,7 +14,7 @@ export default function AssignmentResultPage() {
 
   useWebSocket()
 
-  const { status, progress, error, currentAssignment, setCurrentId, fetchAssignment, reset } =
+  const { status, progress, error, retryMessage, currentAssignment, setCurrentId, fetchAssignment, reset } =
     useAssignmentStore()
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function AssignmentResultPage() {
           {status === "failed" ? (
             <FailedState error={error} onBack={() => router.push("/assignments")} />
           ) : (
-            <GeneratingState progress={progress} />
+            <GeneratingState progress={progress} retryMessage={retryMessage} />
           )}
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function AssignmentResultPage() {
   )
 }
 
-function GeneratingState({ progress }: { progress: number }) {
+function GeneratingState({ progress, retryMessage }: { progress: number; retryMessage: string | null }) {
   const steps = [
     { label: "Connecting to AI",       threshold: 10 },
     { label: "Analysing requirements", threshold: 30 },
@@ -154,9 +154,15 @@ function GeneratingState({ progress }: { progress: number }) {
         <h2 className="text-[18px] font-bold mb-2" style={{ color: "hsl(var(--qm-text))" }}>
           Generating your quest
         </h2>
-        <p className="text-[13px]" style={{ color: "hsl(var(--qm-text-muted))" }}>
-          AI is crafting your questions. Usually takes 5–15 seconds.
-        </p>
+        {retryMessage ? (
+          <p className="text-[13px] font-medium" style={{ color: "hsl(var(--qm-warning))" }}>
+            {retryMessage}
+          </p>
+        ) : (
+          <p className="text-[13px]" style={{ color: "hsl(var(--qm-text-muted))" }}>
+            AI is crafting your questions. Usually takes 5–15 seconds.
+          </p>
+        )}
       </div>
     </div>
   )

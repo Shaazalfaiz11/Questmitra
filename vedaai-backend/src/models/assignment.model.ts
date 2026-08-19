@@ -7,8 +7,7 @@ const QuestionSchema = new Schema(
     marks:      { type: Number, required: true, min: 1 },
     type:       { type: String, enum: ["mcq", "short", "long"], required: true },
     options:    { type: [String], default: undefined },
-  },
-  { _id: false }
+  }
 )
 
 const SectionSchema = new Schema(
@@ -30,6 +29,7 @@ export interface IAssignment extends Document {
   status:        "pending" | "generating" | "completed" | "failed"
   result:        any[] | null
   error:         string | null
+  retryCount:    number
   createdAt:     Date
   updatedAt:     Date
 }
@@ -57,6 +57,7 @@ const AssignmentSchema = new Schema<IAssignment>(
     },
     result: { type: Schema.Types.Mixed, default: null },
     error:  { type: String, default: null },
+    retryCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 )

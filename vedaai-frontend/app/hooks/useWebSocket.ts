@@ -36,6 +36,13 @@ export const useWebSocket = () => {
             // Also fetch to update the list status
             useAssignmentStore.getState().fetchAssignments()
             break
+          case "ASSIGNMENT_RETRYING":
+            if (data.assignmentId === currentId) {
+              setStatus("generating")
+              useAssignmentStore.getState().setRetryMessage(data.message)
+            }
+            useAssignmentStore.getState().fetchAssignments()
+            break
           case "ASSIGNMENT_COMPLETED":
             if (data.assignmentId === currentId) {
               setProgress(100)
@@ -55,6 +62,17 @@ export const useWebSocket = () => {
               setError(data.error || "Generation failed")
             }
             useAssignmentStore.getState().fetchAssignments()
+            break
+          case "ASSIGNMENT_QUESTION_REGENERATED":
+            if (data.assignmentId === currentId) {
+              useAssignmentStore.getState().updateQuestion(data.sectionIndex, data.questionIndex, data.newQuestion)
+              useAssignmentStore.getState().setRegeneratingQuestionId(null)
+            }
+            break
+          case "ASSIGNMENT_QUESTION_REGEN_FAILED":
+            if (data.assignmentId === currentId) {
+              useAssignmentStore.getState().setRegeneratingQuestionId(null)
+            }
             break
         }
       } catch {}

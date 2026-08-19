@@ -1,4 +1,6 @@
 import OpenAI from "openai"
+import { Types } from "mongoose"
+import { LLMTimeoutError } from "../utils/errors"
 
 const client = new OpenAI({
   baseURL: "https://api.groq.com/openai/v1",
@@ -6,6 +8,7 @@ const client = new OpenAI({
 })
 
 export interface Question {
+  _id?:       string
   text:       string
   difficulty: "easy" | "medium" | "hard"
   marks:      number
@@ -86,6 +89,7 @@ const parseAndValidate = (raw: string): Section[] => {
     title:       section.title ?? `Section ${String.fromCharCode(65 + i)}`,
     instruction: section.instruction ?? "Attempt all questions",
     questions: (section.questions ?? []).map((q: any) => ({
+      _id:        new Types.ObjectId().toString(),
       text:       q.text ?? "Question text missing",
       difficulty: ["easy", "medium", "hard"].includes(q.difficulty) ? q.difficulty : "medium",
       marks:      Number(q.marks) || 1,
@@ -98,44 +102,107 @@ const parseAndValidate = (raw: string): Section[] => {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export const generateWithAI = async (
-  prompt: string,
-  retries = 3
+  prompt: string
 ): Promise<Section[]> => {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      console.log(`🤖 Groq attempt ${attempt}/${retries}`)
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => abortController.abort(), 30000);
 
-      const response = await client.chat.completions.create({
-        model:       process.env.GROQ_GENERATION_MODEL ?? "openai/gpt-oss-120b",
-        max_tokens:  4096,
-        temperature: 0.7,
-        messages: [
-          {
-            role:    "system",
-            content: "You are an exam paper generator. Always respond with valid JSON only. No markdown, no explanation.",
-          },
-          { role: "user", content: prompt },
-        ],
-      })
+  try {
+    const response = await client.chat.completions.create({
+      model:       process.env.GROQ_GENERATION_MODEL ?? "openai/gpt-oss-120b",
+      max_tokens:  4096,
+      temperature: 0.7,
+      messages: [
+        {
+          role:    "system",
+          content: "You are an exam paper generator. Always respond with valid JSON only. No markdown, no explanation.",
+        },
+        { role: "user", content: prompt },
+      ],
+    }, { signal: abortController.signal as any });
 
-      const raw = response.choices[0]?.message?.content ?? ""
-      console.log(`✅ Groq response received (${raw.length} chars)`)
-      return parseAndValidate(raw)
-
-    } catch (error: any) {
-      const isRateLimit   = error?.status === 429 || error?.message?.includes("429")
-      const isLastAttempt = attempt === retries
-
-      if (isRateLimit && !isLastAttempt) {
-        const waitMs = attempt * 10000 // Groq resets faster than DeepSeek
-        console.warn(`⏳ Rate limited. Retrying in ${waitMs / 1000}s...`)
-        await sleep(waitMs)
-        continue
-      }
-
-      throw error
+    const raw = response.choices[0]?.message?.content ?? "";
+    console.log(`✅ Groq response received (${raw.length} chars)`);
+    return parseAndValidate(raw);
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      throw new LLMTimeoutError();
     }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
+}
 
-  throw new Error("AI generation failed after all retries")
+export const generateSingleQuestionWithAI = async (
+  assignment: any,
+  oldQuestion: Question
+): Promise<Question> => {
+  const abortController = new AbortController()
+  const timeoutId = setTimeout(() => abortController.abort(), 30000)
+
+  const prompt = `
+You are an expert exam paper generator for academic institutions.
+
+Regenerate a SINGLE question for this context:
+- Subject: ${assignment.subject}
+- Topic: ${assignment.topic}
+- Original Question (DO NOT return the same question): "${oldQuestion.text}"
+- Question Type MUST BE: ${oldQuestion.type}
+- Difficulty MUST BE: ${oldQuestion.difficulty}
+- Marks MUST BE: ${oldQuestion.marks}
+
+Rules:
+1. Return exactly ONE question.
+2. Provide a completely different text for the question than the original.
+3. Keep the exact same difficulty, type, and marks.
+4. If it is an MCQ, provide exactly 4 options.
+5. Return ONLY a valid JSON object. No markdown, no explanations, no arrays.
+
+Example format:
+{
+  "text": "New regenerated question here",
+  "type": "${oldQuestion.type}",
+  "difficulty": "${oldQuestion.difficulty}",
+  "marks": ${oldQuestion.marks},
+  "options": ["Opt A", "Opt B", "Opt C", "Opt D"]
+}
+  `.trim()
+
+  try {
+    const response = await client.chat.completions.create({
+      model:       process.env.GROQ_GENERATION_MODEL ?? "openai/gpt-oss-120b",
+      max_tokens:  500,
+      temperature: 0.8,
+      messages: [
+        {
+          role:    "system",
+          content: "You are an exam paper generator. Always respond with valid JSON only. No markdown, no explanation.",
+        },
+        { role: "user", content: prompt },
+      ],
+    }, { signal: abortController.signal as any })
+
+    const raw = response.choices[0]?.message?.content ?? ""
+    let cleaned = raw.replace(/```json\n?/gi, "").replace(/```\n?/g, "").trim()
+    
+    // In case the AI still wraps it in an array
+    if (cleaned.startsWith("[") && cleaned.endsWith("]")) {
+      const arr = JSON.parse(cleaned)
+      cleaned = JSON.stringify(arr[0])
+    }
+    
+    const parsed = JSON.parse(cleaned)
+
+    if (!parsed.text || !parsed.type || !parsed.difficulty || !parsed.marks) {
+      throw new Error("Invalid question format from AI")
+    }
+
+    return parsed as Question
+  } catch (error: any) {
+    if (error.name === "AbortError") throw new LLMTimeoutError()
+    throw error
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }

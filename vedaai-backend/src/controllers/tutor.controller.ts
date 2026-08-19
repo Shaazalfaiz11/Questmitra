@@ -6,7 +6,7 @@ const client = new OpenAI({
   apiKey: process.env.GROQ_API_KEY!,
 });
 
-const TUTOR_SYSTEM_PROMPT = `You are an enthusiastic, patient, and encouraging English language tutor named "Quest Mitra Tutor". 
+const TUTOR_SYSTEM_PROMPT = `You are an enthusiastic, patient, and encouraging English language tutor named "Veda Tutor". 
 
 Your role:
 - Help students improve their English speaking, grammar, vocabulary, and pronunciation

@@ -7,19 +7,22 @@ import { getRedisConnection }  from "../config/redis"
 import { Assignment }       from "../models/assignment.model"
 import { getPub }           from "../events/eventBus"
 import { buildPrompt, generateWithAI } from "../services/ai.service"
+import { logger }           from "../utils/logger"
+import { LLMTimeoutError }  from "../utils/errors"
 
 const publish = (payload: object) =>
   getPub().publish("ASSIGNMENT_EVENTS", JSON.stringify(payload))
 
 const startWorker = async () => {
   await connectDb()
-  console.log("✅ DB Connected in Worker")
+  logger.info("✅ DB Connected in Worker")
 
   new Worker(
     "assignment-generation",
     async (job) => {
       const { assignmentId } = job.data
-      console.log("📋 Processing:", assignmentId)
+      logger.info({ assignmentId, attempt: job.attemptsMade }, "📋 Processing assignment")
+      const startTime = Date.now()
 
       try {
         await publish({ type: "ASSIGNMENT_GENERATING", assignmentId, progress: 10 })
@@ -30,7 +33,7 @@ const startWorker = async () => {
         const prompt = buildPrompt(assignment)
 
         await publish({ type: "ASSIGNMENT_GENERATING", assignmentId, progress: 40 })
-        console.log("🤖 Calling Groq AI...")
+        logger.info({ assignmentId }, "🤖 Calling AI...")
 
         const result = await generateWithAI(prompt)
 
@@ -43,14 +46,36 @@ const startWorker = async () => {
         })
 
         await publish({ type: "ASSIGNMENT_COMPLETED", assignmentId })
-        console.log("✅ Assignment completed:", assignmentId)
+        const duration = Date.now() - startTime
+        logger.info({ assignmentId, duration }, "✅ Assignment completed")
 
       } catch (error: any) {
-        console.error("❌ Worker Error:", error.message)
+        const duration = Date.now() - startTime
+        logger.error({ error: error.message, assignmentId, duration, name: error.name }, "❌ Worker Error")
+
+        const attemptsMade = job.attemptsMade
+        const maxAttempts = job.opts.attempts || 4
+
+        if (attemptsMade < maxAttempts) {
+          logger.info({ assignmentId, attemptsMade, maxAttempts }, "Job failed, retrying...")
+          
+          await Assignment.findByIdAndUpdate(assignmentId, {
+            retryCount: attemptsMade,
+          })
+
+          await publish({
+            type: "ASSIGNMENT_RETRYING",
+            assignmentId,
+            message: `Generation timed out. Retrying (${attemptsMade}/${maxAttempts - 1})...`,
+          })
+
+          throw error // Let BullMQ apply backoff and retry
+        }
 
         await Assignment.findByIdAndUpdate(assignmentId, {
           status: "failed",
           error:  error.message,
+          retryCount: attemptsMade,
         })
 
         await publish({
@@ -63,13 +88,14 @@ const startWorker = async () => {
     {
       connection:  getRedisConnection(),
       concurrency: 1,
-      stalledInterval: 240000, // 4 minutes (guarantees a check before Upstash's 5-min timeout)
-      drainDelay: 240, // 4 minutes
-      skipDelayCheck: true, // Stop polling for delayed jobs
+      lockDuration: 60000,
+      stalledInterval: 30000,
+      drainDelay: 240,
+      skipDelayCheck: false,
     } as any
   )
 
-  console.log("🚀 Worker Started")
+  logger.info("🚀 Worker Started")
 }
 
 startWorker()

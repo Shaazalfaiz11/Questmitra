@@ -5,8 +5,8 @@ export const getRedisConnection = () => {
     const raw = process.env.REDIS_URL
     if (!raw) {
       throw new Error(
-        "REDIS_URL is not set. Background jobs (assignment generation, PDF processing) " +
-          "need Redis. Add REDIS_URL to vedaai-backend/.env and restart."
+        "REDIS_URL is not set. Background jobs (assignment generation, question " +
+          "regeneration, PDF processing) need Redis. Add REDIS_URL to your .env and restart."
       )
     }
 

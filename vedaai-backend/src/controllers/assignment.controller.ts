@@ -1,37 +1,27 @@
 import { Request, Response } from "express"
 import { Assignment }        from "../models/assignment.model"
 import { getGenerationQueue } from "../queues/generation.queue"
-
-const VALID_TYPES = ["mcq", "short", "long"]
-
-const validateBody = (body: any): string | null => {
-  if (!body.subject?.trim())         return "subject is required"
-  if (!body.topic?.trim())           return "topic is required"
-  if (!body.totalMarks)              return "totalMarks is required"
-  if (Number(body.totalMarks) <= 0)  return "totalMarks must be greater than 0"
-  if (Number(body.totalMarks) > 500) return "totalMarks cannot exceed 500"
-  if (!Number.isInteger(Number(body.totalMarks))) return "totalMarks must be a whole number"
-  if (!Array.isArray(body.questionTypes) || body.questionTypes.length === 0)
-    return "questionTypes must be a non-empty array"
-  const invalid = body.questionTypes.filter((t: string) => !VALID_TYPES.includes(t))
-  if (invalid.length) return `invalid questionTypes: ${invalid.join(", ")}`
-  return null
-}
+import { getQuestionRegenQueue } from "../queues/questionRegen.queue"
+import { CreateAssignmentSchema } from "../types/idempotency"
+import { updateRecord } from "../services/idempotency.service"
+import { logger } from "../utils/logger"
 
 export const createAssignment = async (req: Request, res: Response) => {
-  const err = validateBody(req.body)
-  if (err) return res.status(400).json({ message: err })
+  const parsed = CreateAssignmentSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ message: parsed.error.issues[0].message })
+  }
 
   let assignment: InstanceType<typeof Assignment> | null = null
 
   try {
     assignment = await Assignment.create({
-      subject:       req.body.subject.trim(),
-      topic:         req.body.topic.trim(),
-      totalMarks:    Number(req.body.totalMarks),
-      questionTypes: req.body.questionTypes,
-      instructions:  req.body.instructions?.trim() || "Attempt all questions",
-      dueDate:       req.body.dueDate || null,
+      subject:       parsed.data.subject,
+      topic:         parsed.data.topic,
+      totalMarks:    parsed.data.totalMarks,
+      questionTypes: parsed.data.questionTypes,
+      instructions:  parsed.data.instructions || "Attempt all questions",
+      dueDate:       parsed.data.dueDate || null,
       status:        "generating",
     })
 
@@ -40,13 +30,20 @@ export const createAssignment = async (req: Request, res: Response) => {
       { assignmentId: assignment._id }
     )
 
+    if (req.idempotencyKey) {
+      await updateRecord(req.idempotencyKey, {
+        assignmentId: assignment._id.toString(),
+        jobId: job.id,
+      })
+    }
+
     res.status(201).json({
       message: "Assignment created. Generation started.",
       jobId:   job.id,
       data:    assignment,
     })
   } catch (error) {
-    console.error("createAssignment error:", error)
+    logger.error({ error }, "createAssignment error")
 
     // The record is created before the job is queued, so a failed enqueue would
     // otherwise leave it stuck on "generating" forever.
@@ -90,5 +87,59 @@ export const deleteAssignment = async (req: Request, res: Response) => {
     res.json({ message: "Deleted successfully" })
   } catch {
     res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+export const regenerateQuestion = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id, questionId } = req.params;
+
+    const assignment = await Assignment.findById(id);
+    if (!assignment) {
+      res.status(404).json({ success: false, error: "Assignment not found" });
+      return;
+    }
+
+    let foundQuestion = null;
+    let sectionIndex = -1;
+    let questionIndex = -1;
+
+    if (assignment.result) {
+      for (let i = 0; i < assignment.result.length; i++) {
+        const sec = assignment.result[i];
+        if (sec.questions) {
+          for (let j = 0; j < sec.questions.length; j++) {
+            if ((sec.questions[j] as any)._id?.toString() === questionId) {
+              foundQuestion = sec.questions[j];
+              sectionIndex = i;
+              questionIndex = j;
+              break;
+            }
+          }
+        }
+        if (foundQuestion) break;
+      }
+    }
+
+    if (!foundQuestion) {
+      res.status(404).json({ success: false, error: "Question not found in assignment" });
+      return;
+    }
+
+    await getQuestionRegenQueue().add(
+      "regenerate-question",
+      { assignmentId: id, questionId, sectionIndex, questionIndex }
+    );
+
+    res.json({
+      success: true,
+      message: "Question regeneration queued",
+    });
+  } catch (error) {
+    logger.error({ error }, "regenerateQuestion error")
+    res.status(500).json({ success: false, error: "Internal server error" });
   }
 }

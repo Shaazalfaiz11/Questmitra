@@ -1,7 +1,8 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { Assignment, Section, Question } from "@/store/assignmentStore"
+import { Assignment, Section, Question, useAssignmentStore } from "@/store/assignmentStore"
+import { API_URL } from "@/lib/api"
 
 interface Props {
   assignment: Assignment
@@ -10,6 +11,7 @@ interface Props {
 export default function ExamPaper({ assignment }: Props) {
   const paperRef = useRef<HTMLDivElement>(null)
   const [printing, setPrinting] = useState(false)
+  const { regeneratingQuestionId, setRegeneratingQuestionId } = useAssignmentStore()
 
   const sections: Section[] = assignment.result ?? []
   const totalQ = sections.reduce((a, s) => a + s.questions.length, 0)
@@ -45,6 +47,22 @@ export default function ExamPaper({ assignment }: Props) {
     if (d === "easy") return { bg: "hsl(var(--qm-success-light))", color: "hsl(var(--qm-success))" }
     if (d === "hard") return { bg: "hsl(var(--qm-error-light))", color: "hsl(var(--qm-error))" }
     return { bg: "hsl(var(--qm-warning-light))", color: "hsl(var(--qm-warning))" }
+  }
+
+  const handleRegenerate = async (questionId: string) => {
+    if (!assignment._id) return
+    setRegeneratingQuestionId(questionId)
+    try {
+      const response = await fetch(
+        `${API_URL}/api/assignments/${assignment._id}/questions/${questionId}/regenerate`,
+        { method: "POST" }
+      )
+      if (!response.ok) throw new Error("Failed to queue regeneration")
+    } catch (e) {
+      console.error(e)
+      setRegeneratingQuestionId(null)
+      alert("Failed to regenerate question. Please try again.")
+    }
   }
 
   return (
@@ -150,27 +168,52 @@ export default function ExamPaper({ assignment }: Props) {
                     <div className="space-y-4">
                       {sec.questions.map((q, qi) => {
                         const dc = getDifficultyColor(q.difficulty)
+                        const isRegenerating = regeneratingQuestionId === q._id
                         return (
-                          <div key={qi} className="text-[13px] text-gray-800 flex items-start gap-2 avoid-break leading-relaxed">
+                          <div key={qi} className="text-[13px] text-gray-800 flex items-start gap-2 avoid-break leading-relaxed relative group">
                             <span className="min-w-[16px]">{qi + 1}.</span>
-                            <div>
-                              <p>
-                                <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mr-1.5"
-                                  style={{ background: dc.bg, color: dc.color }}
-                                >
-                                  {getDifficultyString(q.difficulty)}
-                                </span>
-                                {q.text || "Question text missing"}{" "}
-                                <span className="text-gray-500">[{q.marks || 1} Marks]</span>
-                              </p>
-                              {q.type === "mcq" && q.options && q.options.length > 0 && (
-                                <div className="pl-4 mt-2 space-y-1">
-                                  {q.options.map((opt, oi) => (
-                                    <div key={oi}>
-                                      {String.fromCharCode(65 + oi)}. {opt}
-                                    </div>
-                                  ))}
+                            <div className="flex-1">
+                              {isRegenerating ? (
+                                <div className="flex items-center gap-2 text-gray-500 italic py-1">
+                                  <span className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                                  Regenerating question...
                                 </div>
+                              ) : (
+                                <>
+                                  <div className="flex justify-between items-start gap-4">
+                                    <p>
+                                      <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mr-1.5"
+                                        style={{ background: dc.bg, color: dc.color }}
+                                      >
+                                        {getDifficultyString(q.difficulty)}
+                                      </span>
+                                      {q.text || "Question text missing"}{" "}
+                                      <span className="text-gray-500">[{q.marks || 1} Marks]</span>
+                                    </p>
+                                    {q._id && !printing && (
+                                      <button
+                                        onClick={() => handleRegenerate(q._id as string)}
+                                        className="no-print opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0"
+                                        style={{ color: "hsl(var(--qm-accent))" }}
+                                        title="Regenerate this question"
+                                      >
+                                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        <span className="text-[11px] font-bold">Regenerate</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                  {q.type === "mcq" && q.options && q.options.length > 0 && (
+                                    <div className="pl-4 mt-2 space-y-1">
+                                      {q.options.map((opt, oi) => (
+                                        <div key={oi}>
+                                          {String.fromCharCode(65 + oi)}. {opt}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
