@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import { Assignment }        from "../models/assignment.model"
-import { generationQueue }   from "../queues/generation.queue"
-import { questionRegenQueue } from "../queues/questionRegen.queue"
+import { getGenerationQueue } from "../queues/generation.queue"
+import { getQuestionRegenQueue } from "../queues/questionRegen.queue"
 import { CreateAssignmentSchema } from "../types/idempotency"
 import { updateRecord } from "../services/idempotency.service"
 import { logger } from "../utils/logger"
@@ -12,8 +12,10 @@ export const createAssignment = async (req: Request, res: Response) => {
     return res.status(400).json({ message: parsed.error.issues[0].message })
   }
 
+  let assignment: InstanceType<typeof Assignment> | null = null
+
   try {
-    const assignment = await Assignment.create({
+    assignment = await Assignment.create({
       subject:       parsed.data.subject,
       topic:         parsed.data.topic,
       totalMarks:    parsed.data.totalMarks,
@@ -23,7 +25,7 @@ export const createAssignment = async (req: Request, res: Response) => {
       status:        "generating",
     })
 
-    const job = await generationQueue.add(
+    const job = await getGenerationQueue().add(
       "generate-paper",
       { assignmentId: assignment._id }
     )
@@ -42,6 +44,16 @@ export const createAssignment = async (req: Request, res: Response) => {
     })
   } catch (error) {
     logger.error({ error }, "createAssignment error")
+
+    // The record is created before the job is queued, so a failed enqueue would
+    // otherwise leave it stuck on "generating" forever.
+    if (assignment) {
+      await Assignment.findByIdAndUpdate(assignment._id, {
+        status: "failed",
+        error: error instanceof Error ? error.message : "Could not queue generation",
+      }).catch(() => {})
+    }
+
     res.status(500).json({ message: "Internal server error" })
   }
 }
@@ -117,7 +129,7 @@ export const regenerateQuestion = async (
       return;
     }
 
-    await questionRegenQueue.add(
+    await getQuestionRegenQueue().add(
       "regenerate-question",
       { assignmentId: id, questionId, sectionIndex, questionIndex }
     );

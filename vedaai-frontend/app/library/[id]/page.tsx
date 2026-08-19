@@ -4,6 +4,7 @@ import React, { useEffect, useState, use } from "react";
 import axios from "axios";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { API_URL } from "../../lib/api";
 
 const Reader = dynamic(() => import("../../../components/library/Reader"), { ssr: false });
@@ -24,30 +25,44 @@ export default function BookReaderPage({ params }: { params: Promise<{ id: strin
         setIsLoading(false);
       }
     };
-    
+
     if (id) fetchBook();
   }, [id]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-100 to-gray-200 gap-3">
-        <Loader2 className="animate-spin text-indigo-500" size={48} />
-        <p className="text-gray-500 text-sm font-medium">Loading book...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3"
+        style={{ background: "hsl(var(--qm-bg))" }}
+      >
+        <Loader2 className="animate-spin" size={40} style={{ color: "hsl(var(--qm-accent))" }} />
+        <p className="text-[13px] font-medium" style={{ color: "hsl(var(--qm-text-muted))" }}>Loading book...</p>
       </div>
     );
   }
 
   if (!book) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <h2 className="text-2xl font-bold text-gray-700">Book not found.</h2>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4"
+        style={{ background: "hsl(var(--qm-bg))" }}
+      >
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
+          style={{ background: "hsl(var(--qm-error-light))" }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--qm-error))" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 className="text-[18px] font-bold" style={{ color: "hsl(var(--qm-text))" }}>Book not found</h2>
+        <Link href="/library" className="qm-btn qm-btn-primary text-[13px]">
+          ← Back to Library
+        </Link>
       </div>
     );
   }
 
   return (
-    <Reader 
-      bookId={book._id} 
+    <Reader
+      bookId={book._id}
       totalPages={book.totalPages === 0 ? 10 : book.totalPages}
       title={book.title}
       author={book.author}

@@ -33,6 +33,8 @@ export interface AssignmentForm {
 }
 
 export interface Question {
+  /** Present on persisted questions; needed to target one for regeneration. */
+  _id?: string
   text: string
   difficulty: Difficulty
   marks: number
@@ -328,6 +330,6 @@ export const useAssignmentStore = create<AssignmentState>()(
           regeneratingQuestionId: null,
         }),
     }),
-    { name: "veda-assignment" }
+    { name: "quest-mitra" }
   )
 )

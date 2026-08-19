@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Book } from "../models/Book";
 import { UserReading } from "../models/UserReading";
-import { pdfQueue } from "../queues/pdf.queue";
+import { getPdfQueue } from "../queues/pdf.queue";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
@@ -124,7 +124,7 @@ export const uploadBook = async (req: Request, res: Response) => {
     });
 
     // Add job to PDF processing queue
-    await pdfQueue.add("process-pdf", {
+    await getPdfQueue().add("process-pdf", {
       bookId: book._id,
       pdfPath: filePath
     });

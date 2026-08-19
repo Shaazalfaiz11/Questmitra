@@ -109,7 +109,7 @@ export const generateWithAI = async (
 
   try {
     const response = await client.chat.completions.create({
-      model:       "llama-3.3-70b-versatile",
+      model:       process.env.GROQ_GENERATION_MODEL ?? "openai/gpt-oss-120b",
       max_tokens:  4096,
       temperature: 0.7,
       messages: [
@@ -171,7 +171,7 @@ Example format:
 
   try {
     const response = await client.chat.completions.create({
-      model:       "llama-3.3-70b-versatile",
+      model:       process.env.GROQ_GENERATION_MODEL ?? "openai/gpt-oss-120b",
       max_tokens:  500,
       temperature: 0.8,
       messages: [

@@ -48,7 +48,7 @@ export const chatWithTutor = async (req: Request, res: Response) => {
     ];
 
     const stream = await client.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: process.env.GROQ_TUTOR_MODEL ?? "openai/gpt-oss-20b",
       max_tokens: 200,
       temperature: 0.8,
       messages,

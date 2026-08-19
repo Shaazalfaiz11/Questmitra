@@ -1,7 +1,14 @@
 import type { Metadata } from "next"
-import { Plus_Jakarta_Sans } from "next/font/google"
+import { Inter, Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
 import Sidebar from "@/components/Sidebar"
+import { THEME_INIT_SCRIPT } from "@/lib/theme"
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+})
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -10,16 +17,27 @@ const jakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "VedaAI - by Shaaz Alfaiz",
-  description: "Create AI-powered assignments and question papers",
+  title: "Quest Mitra — Your AI Companion",
+  description:
+    "Your AI companion for every quest — explore, learn, create assessments, and achieve your goals with intelligent AI assistance.",
+  openGraph: {
+    title: "Quest Mitra — Your AI Companion",
+    description:
+      "Your AI companion for every quest — explore, learn, create assessments, and achieve your goals.",
+    type: "website",
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={jakarta.variable}>
-      <body suppressHydrationWarning className="bg-[#CECECE] md:bg-[#EEEEEE] font-['Plus_Jakarta_Sans']" style={{ background: 'linear-gradient(180deg, #EEEEEE 0%, #DADADA 100%)' }}>
+    <html lang="en" className={`${inter.variable} ${jakarta.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Applies the stored/system theme before paint to avoid a flash of the wrong palette. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
+      <body className="font-sans">
         <Sidebar />
-        <main className="md:ml-[350px] ml-0 min-h-screen pt-20 md:pt-6 pb-24 md:pb-6 md:pr-6">
+        <main className="md:ml-[280px] ml-0 min-h-screen pt-[72px] md:pt-0 pb-24 md:pb-0">
           {children}
         </main>
       </body>

@@ -8,9 +8,6 @@ const nextConfig = {
     return config
   },
   turbopack: {},
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },

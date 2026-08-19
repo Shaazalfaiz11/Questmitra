@@ -10,6 +10,7 @@
     "dev:pdf": "ts-node-dev --respawn --transpile-only src/workers/pdf.worker.ts",
     "dev:regen-worker": "ts-node-dev --respawn --transpile-only src/workers/questionRegen.worker.ts",
     "build": "tsc",
+    "test": "jest",
     "start": "concurrently \"node dist/server.js\" \"node dist/workers/generation.worker.js\" \"node dist/workers/pdf.worker.js\" \"node dist/workers/questionRegen.worker.js\""
   },
   "keywords": [],

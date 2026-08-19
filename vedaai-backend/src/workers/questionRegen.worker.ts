@@ -5,12 +5,12 @@ import { Worker }           from "bullmq"
 import { connectDb }        from "../config/db"
 import { getRedisConnection }  from "../config/redis"
 import { Assignment }       from "../models/assignment.model"
-import { pub }              from "../events/eventBus"
+import { getPub }           from "../events/eventBus"
 import { generateSingleQuestionWithAI } from "../services/ai.service"
 import { logger }           from "../utils/logger"
 
 const publish = (payload: object) =>
-  pub.publish("ASSIGNMENT_EVENTS", JSON.stringify(payload))
+  getPub().publish("ASSIGNMENT_EVENTS", JSON.stringify(payload))
 
 const startWorker = async () => {
   await connectDb()
